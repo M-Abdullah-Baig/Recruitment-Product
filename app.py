@@ -218,14 +218,15 @@ st.markdown("""
 
 # Constants
 
-RESUME_FOLDER = r'C:\Users\PMLS\Desktop\Recruitment product - host remaining\Resumes'
+RESUME_FOLDER = 'Resumes'
 
-JD_FOLDER = r'C:\Users\PMLS\Desktop\Recruitment product - host remaining\JDs'
+JD_FOLDER = 'JDs'
 
-DATABASE = r'C:\Users\PMLS\Desktop\Recruitment product - host remaining\recruitment.db'
+DATABASE = 'recruitment.db'
 
 
 load_dotenv()
+
 EMAIL = st.secrets["EMAIL"]
 
 PASSWORD = st.secrets["PASSWORD"]
