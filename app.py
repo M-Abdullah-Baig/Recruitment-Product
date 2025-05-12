@@ -418,7 +418,7 @@ def init_db():
     conn.close()
 
 def store_analysis(name, email, mobile, strengths, score, recommendation, gaps, resume_path, job_title, batch_id):
-    status = "Shortlisted" if float(score) >= 5 else "Rejected"
+    status = "Shortlisted" if float(score) >= 6 else "Rejected"
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''SELECT COUNT(*) FROM analysis 
