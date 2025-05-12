@@ -448,7 +448,7 @@ def load_data():
     try:
         with sqlite3.connect(DATABASE) as conn:
             df = pd.read_sql_query("SELECT * FROM analysis", conn)
-            return df.sort_values(by='id', ascending=False).head(20)
+            return df.sort_values(by='id', ascending=False)
     except Exception as e:
         st.error(f"Failed to load data: {e}")
         return pd.DataFrame()
