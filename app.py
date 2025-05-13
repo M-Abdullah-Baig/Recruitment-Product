@@ -227,9 +227,9 @@ DATABASE = 'recruitment.db'
 
 load_dotenv()
 
-EMAIL = st.secrets["EMAIL"]
+EMAIL = os.getenv("EMAIL")
 
-PASSWORD = st.secrets["PASSWORD"]
+PASSWORD = os.getenv("PASSWORD")
 
 IMAP_SERVER = "imap.stackmail.com"
 IMAP_PORT = 993
@@ -342,7 +342,7 @@ def format_date(d):
     return d.strftime("%d-%b-%Y")
 
 def analyze_resume_with_gpt(resume_info, job_description):
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
+    openai.api_key = os.getenv("OPENAI_API_KEY")
     if not openai.api_key:
         st.error("OpenAI API key not found in environment variables.")
         return "Score: 0\nRecommendation: Analysis failed due to missing API key\nStrengths: None\nGaps: None"
