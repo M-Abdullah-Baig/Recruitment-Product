@@ -448,7 +448,7 @@ def load_data():
     try:
         with sqlite3.connect(DATABASE) as conn:
             df = pd.read_sql_query("SELECT * FROM analysis", conn)
-            return df.sort_values(by='id', ascending=False)
+            return df.sort_values(by='id', ascending=False).head(50)
     except Exception as e:
         st.error(f"Failed to load data: {e}")
         return pd.DataFrame()
@@ -590,7 +590,7 @@ elif st.session_state.page == "dashboard":
     if submit_button:
         df = load_data()
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-    
+
         if 'date_added' in df.columns:
             df['date_added'] = pd.to_datetime(df['date_added'], errors='coerce')
             filtered_df = df[
@@ -599,17 +599,17 @@ elif st.session_state.page == "dashboard":
             ]
         else:
             filtered_df = df
-        
+
         if subject_filter:
             filtered_df = filtered_df[filtered_df['job_title'].str.contains(subject_filter, case=False, na=False, regex=True)]
-        
+
         if batch_start_date and batch_end_date:
             batch_id = f"{batch_start_date.strftime('%Y-%m-%d')}_to_{batch_end_date.strftime('%Y-%m-%d')}"
             filtered_df = filtered_df[filtered_df['batch_id'].str.contains(batch_id, case=False, na=False, regex=True)]
-        
+
         if status_filter != "All":
             filtered_df = filtered_df[filtered_df['status'] == status_filter]
-    
+
         if show_top_n > 0:
             filtered_df = filtered_df.sort_values('score', ascending=False).head(show_top_n)
 
@@ -633,7 +633,7 @@ elif st.session_state.page == "dashboard":
             st.markdown('<div class="metric-card metric-card-rejected">', unsafe_allow_html=True)
             st.metric("Rejected", len(filtered_df[filtered_df['status'] == "Rejected"]))
             st.markdown('</div>', unsafe_allow_html=True)
-        
+
         if not filtered_df.empty:
             for index, row in filtered_df.iterrows():
                 with st.expander(f"Report - {row['name']} ({row['job_title']}) - Hiring: {row['batch_id']}"):
@@ -668,6 +668,8 @@ elif st.session_state.page == "dashboard":
                     col1, col2 = st.columns([1, 3])
                     col1.markdown('<span class="label">Batch ID</span>', unsafe_allow_html=True)
                     col2.markdown(f'<span class="value">{row["batch_id"]}</span>', unsafe_allow_html=True)
+
+                    # Option to download the resume, if available
                     resume_path = row.get('resume_path', None)
                     if resume_path and os.path.exists(resume_path):
                         with open(resume_path, "rb") as file:
@@ -682,19 +684,21 @@ elif st.session_state.page == "dashboard":
                         st.error("Resume file not found or path missing in database.")
                     st.markdown('</div>', unsafe_allow_html=True)
 
-                    df = pd.DataFrame([row])
-                    output = BytesIO()
-                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                        df.to_excel(writer, index=False, sheet_name='Resume Analysis')
-                    excel_data = output.getvalue()
-                    col2.download_button(
-                        label="📊 Export to Excel",
-                        data=excel_data,
-                        file_name=f"{row['name']}_resume_analysis.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key=f"export_excel_quick_{index}"
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
+        # Add a single export button at the end of all filtered results
+        if not filtered_df.empty:
+            # Create an Excel export of the entire filtered DataFrame
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                filtered_df.to_excel(writer, index=False, sheet_name='Filtered Resumes')
+            excel_data = output.getvalue()
+
+            # Display the download button for the whole filtered dataset
+            st.download_button(
+                label="📊 Export All to Excel",
+                data=excel_data,
+                file_name="filtered_resumes.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
         else:
             st.info("No results found matching the filters.")
 
@@ -832,6 +836,7 @@ elif st.session_state.page == "process_email":
 
 elif st.session_state.page == "quick_analysis":
     st.title("Quick Resume Analysis")
+
     # Initialize session state for results if not set
     if "quick_analysis_results" not in st.session_state:
         st.session_state.quick_analysis_results = []
@@ -930,6 +935,7 @@ elif st.session_state.page == "quick_analysis":
     # Display results from session state if available
     if st.session_state.quick_analysis_results:
         st.subheader("Resume Analysis Results")
+
         for index, row in enumerate(st.session_state.quick_analysis_results):
             with st.expander(f"Report - {row['name']} ({row['job_title']})"):
                 col1, col2 = st.columns([1, 3])
@@ -972,17 +978,21 @@ elif st.session_state.page == "quick_analysis":
                 else:
                     st.warning("Resume file not found.")
 
-                df = pd.DataFrame([row])
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name='Resume Analysis')
-                excel_data = output.getvalue()
-                col2.download_button(
-                    label="📊 Export to Excel",
-                    data=excel_data,
-                    file_name=f"{row['name']}_resume_analysis.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key=f"export_excel_quick_{index}"
-                )
+        # Export all analyzed results to a single Excel file
+        final_df = pd.DataFrame(st.session_state.quick_analysis_results)
+
+        output_all = BytesIO()
+        with pd.ExcelWriter(output_all, engine='openpyxl') as writer:
+            final_df.to_excel(writer, index=False, sheet_name='Resume Analysis')
+
+        excel_all_data = output_all.getvalue()
+
+        st.download_button(
+            label="📊 Export All Analyses to Excel",
+            data=excel_all_data,
+            file_name="all_resume_analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="export_all_excel"
+        )
     else:
         st.info("No resumes analyzed yet.")
