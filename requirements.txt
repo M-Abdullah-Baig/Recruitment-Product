@@ -6,3 +6,4 @@ pdfminer.six
 python-docx
 xlsxwriter
 imaplib2
+openpyxl
