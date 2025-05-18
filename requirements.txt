@@ -7,3 +7,5 @@ python-docx
 xlsxwriter
 imaplib2
 openpyxl
+psycopg2-binary
+sqlalchemy
