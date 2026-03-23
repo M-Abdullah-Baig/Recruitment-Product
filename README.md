@@ -33,7 +33,7 @@ Virtual environment (recommended)
 
 ## Setup
 1- Clone the repository:
-git clone https://github.com/YourUsername/ai-recruitment-agent.git
+git clone https://github.com/M-Abdullah-Baig/Recruitment-Product.git
 cd ai-recruitment-agent
 
 2- Create and activate a virtual environment:
